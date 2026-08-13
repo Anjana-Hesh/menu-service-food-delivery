@@ -3,6 +3,7 @@ package com.bytebites.menuservice.controller;
 import com.bytebites.menuservice.model.FoodItem;
 import com.bytebites.menuservice.repository.FoodItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,13 +19,16 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/menu")
-@CrossOrigin(origins = "*")
 public class MenuController {
 
     @Autowired
     private FoodItemRepository foodItemRepository;
 
-    private static final String UPLOAD_DIR = System.getProperty("user.home") + "/eca-uploads/";
+    @Value("${app.upload.dir}")
+    private String uploadDir;
+
+    @Value("${app.upload.base-url}")
+    private String uploadBaseUrl;
 
     @GetMapping("/items")
     public ResponseEntity<List<FoodItem>> getAllItems() {
@@ -93,16 +97,16 @@ public class MenuController {
         }
 
         try {
-            File dir = new File(UPLOAD_DIR);
+            File dir = new File(uploadDir);
             if (!dir.exists()) {
                 dir.mkdirs();
             }
 
             String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            Path path = Paths.get(UPLOAD_DIR, filename);
+            Path path = Paths.get(uploadDir, filename);
             Files.write(path, file.getBytes());
 
-            String fileUrl = "http://localhost:8080/api/menu/images/" + filename;
+            String fileUrl = uploadBaseUrl + filename;
             return ResponseEntity.ok().body(new UploadResponse(fileUrl, filename));
 
         } catch (IOException e) {
@@ -113,7 +117,7 @@ public class MenuController {
     @GetMapping("/images/{filename}")
     public ResponseEntity<byte[]> getImage(@PathVariable String filename) {
         try {
-            Path path = Paths.get(UPLOAD_DIR, filename);
+            Path path = Paths.get(uploadDir, filename);
             if (Files.exists(path)) {
                 byte[] imageBytes = Files.readAllBytes(path);
                 return ResponseEntity.ok()
