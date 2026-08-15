@@ -24,6 +24,9 @@ public class MenuController {
     @Autowired
     private FoodItemRepository foodItemRepository;
 
+    @Autowired
+    private com.bytebites.menuservice.service.FileStorageService fileStorageService;
+
     @Value("${app.upload.dir}")
     private String uploadDir;
 
@@ -97,18 +100,9 @@ public class MenuController {
         }
 
         try {
-            File dir = new File(uploadDir);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-
-            String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            Path path = Paths.get(uploadDir, filename);
-            Files.write(path, file.getBytes());
-
-            String fileUrl = uploadBaseUrl + filename;
+            String fileUrl = fileStorageService.storeFile(file);
+            String filename = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
             return ResponseEntity.ok().body(new UploadResponse(fileUrl, filename));
-
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body("Error uploading file: " + e.getMessage());
         }

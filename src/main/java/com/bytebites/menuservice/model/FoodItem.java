@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "items")
+@com.google.cloud.spring.data.datastore.core.mapping.Entity(name = "items")
 public class FoodItem {
 
     @Id
